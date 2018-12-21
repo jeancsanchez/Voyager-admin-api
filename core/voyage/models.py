@@ -1,55 +1,64 @@
-from django.contrib.auth.models import User
 from django.db import models
 
 
-class Funcionario(User):
+class Funcionario(models.Model):
     matricula = models.BigIntegerField(primary_key=True)
+    nome = models.CharField(max_length=100)
 
 
 class Agente(Funcionario):
-    pass
+    def __str__(self):
+        return self.nome
 
 
 class Coordenador(Funcionario):
-    pass
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name_plural = 'Coordenadores'
 
 
-class Status(models.Model):
+class Cidade(models.Model):
+    nome = models.CharField(max_length=100)
+    estado = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nome + '-' + self.estado
+
+
+class TipoViagem(models.Model):
     descricao = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.descricao
 
-class Origem(models.Model):
-    local = models.CharField(max_length=100)
-    data = models.DateTimeField(verbose_name='Data e hora')
-
-
-class Destino(models.Model):
-    local = models.CharField(max_length=100)
-    data = models.DateTimeField(verbose_name='Data e hora')
+    class Meta:
+        verbose_name_plural = 'Tipos de viagens'
 
 
-class Rota(models.Model):
-    origem = models.OneToOneField(Origem, on_delete=models.CASCADE)
-    destino = models.OneToOneField(Destino, on_delete=models.CASCADE)
+class Trajeto(models.Model):
+    saida = models.ForeignKey(Cidade, on_delete=models.PROTECT, related_name='saida')
+    data_saida = models.DateTimeField(verbose_name='Data da saida')
+    chegada = models.ForeignKey(Cidade, on_delete=models.PROTECT, related_name='chegada')
+    data_chegada = models.DateTimeField(verbose_name='Data da chegada')
 
-
-class Roteiro(models.Model):
-    objetivo = models.CharField(max_length=100)
-    rota = models.ForeignKey(Rota, on_delete=models.PROTECT)
+    def __str__(self):
+        return self.saida.nome + ' (' + self.data_saida.strftime('%d/%m/%Y às %H:%M') + ') - ' + \
+               self.chegada.nome + '(' + self.data_chegada.strftime('%d/%m/%Y às %H:%M') + ')'
 
 
 class DocumentoViagem(models.Model):
-    status = models.ForeignKey(Status, on_delete=models.PROTECT)
-    roteiro = models.ForeignKey(Roteiro, on_delete=models.PROTECT)
-    valor = models.DecimalField(max_digits=10, decimal_places=5)
-    solicitante = models.OneToOneField(Funcionario, on_delete=models.CASCADE, related_name='solicitante',
-                                       parent_link=True)
-    coordenador = models.OneToOneField(Coordenador, on_delete=models.PROTECT, related_name='coordenador',
-                                       parent_link=True)
+    tipo_viagem = models.ForeignKey(TipoViagem, on_delete=models.PROTECT, verbose_name='Tipo de viagem')
+    solicitante = models.OneToOneField(Agente, on_delete=models.CASCADE, related_name='solicitante')
+    coordenador = models.OneToOneField(Coordenador, on_delete=models.PROTECT, related_name='coordenador')
+    trajeto = models.ManyToManyField(to=Trajeto)
+    objetivo = models.CharField(max_length=100, verbose_name='Objetivo da viagem')
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return self.solicitante.username + '-' + self.status.descricao
+        return self.solicitante.nome + '-' + self.tipo_viagem.descricao
 
     class Meta:
         verbose_name = 'Documento de viagem (DV)'
-        verbose_name_plural = 'Documentos de viagem'
+        verbose_name_plural = 'Documentos de viagens'
