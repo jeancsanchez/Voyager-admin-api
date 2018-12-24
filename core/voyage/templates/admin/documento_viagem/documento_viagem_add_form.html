@@ -1,0 +1,12 @@
+{% extends 'admin/change_form.html' %}
+{% block object-tools %}
+    <div class="form-row">
+        <button type="submit" onclick="olar();" class="button">Calcular</button>
+    </div>
+    <script>
+        function olar() {
+            document.getElementsByClassName("readonly")[0].innerHTML = "1000"
+        }
+    </script>
+    {{ block.super }}
+{% endblock object-tools %}
