@@ -1,3 +1,5 @@
+import random
+
 from django.db import models
 
 
@@ -10,13 +12,16 @@ class Agente(Funcionario):
     def __str__(self):
         return self.nome
 
+    class Meta:
+        verbose_name_plural = '5. Agentes'
+
 
 class Coordenador(Funcionario):
     def __str__(self):
         return self.nome
 
     class Meta:
-        verbose_name_plural = 'Coordenadores'
+        verbose_name_plural = '6. Coordenadores'
 
 
 class Cidade(models.Model):
@@ -26,6 +31,9 @@ class Cidade(models.Model):
     def __str__(self):
         return self.nome + '-' + self.estado
 
+    class Meta:
+        verbose_name_plural = '3. Cidades'
+
 
 class TipoViagem(models.Model):
     descricao = models.CharField(max_length=100)
@@ -34,7 +42,7 @@ class TipoViagem(models.Model):
         return self.descricao
 
     class Meta:
-        verbose_name_plural = 'Tipos de viagens'
+        verbose_name_plural = '2. Tipos de viagens'
 
 
 class Trajeto(models.Model):
@@ -47,11 +55,14 @@ class Trajeto(models.Model):
         return self.saida.nome + ' (' + self.data_saida.strftime('%d/%m/%Y às %H:%M') + ') - ' + \
                self.chegada.nome + '(' + self.data_chegada.strftime('%d/%m/%Y às %H:%M') + ')'
 
+    class Meta:
+        verbose_name_plural = '4. Trajetos'
+
 
 class DocumentoViagem(models.Model):
     tipo_viagem = models.ForeignKey(TipoViagem, on_delete=models.PROTECT, verbose_name='Tipo de viagem')
-    solicitante = models.OneToOneField(Agente, on_delete=models.CASCADE, related_name='solicitante')
-    coordenador = models.OneToOneField(Coordenador, on_delete=models.PROTECT, related_name='coordenador')
+    solicitante = models.ForeignKey(Agente, on_delete=models.CASCADE, related_name='solicitante')
+    coordenador = models.ForeignKey(Coordenador, on_delete=models.PROTECT, related_name='coordenador')
     trajeto = models.ManyToManyField(to=Trajeto)
     objetivo = models.CharField(max_length=100, verbose_name='Objetivo da viagem')
     valor = models.DecimalField(max_digits=10, decimal_places=2)
@@ -59,6 +70,10 @@ class DocumentoViagem(models.Model):
     def __str__(self):
         return self.solicitante.nome + '-' + self.tipo_viagem.descricao
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.valor = random.randint(1, 10000)
+        super().save(force_insert, force_update, using, update_fields)
+
     class Meta:
         verbose_name = 'Documento de viagem (DV)'
-        verbose_name_plural = 'Documentos de viagens'
+        verbose_name_plural = '1. Documentos de viagens'
